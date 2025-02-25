@@ -4,6 +4,7 @@ import api.enums.Endpoint;
 import api.models.*;
 import api.requests.checked.CheckedRequests;
 import api.requests.unchecked.UncheckedRequests;
+import api.spec.ResponseSpecifications;
 import api.spec.Specifications;
 import io.restassured.response.Response;
 import org.testng.annotations.BeforeMethod;
@@ -75,24 +76,20 @@ public class ProjectApiTest extends BaseApiTest {
     @Test
     public void projectShouldNotBeCreatedIfNameAlreadyExist() {
         var project = testData.getProject();
-        project.setName("test");
-        uncheckedRequesterAuthByUser.getRequest(Endpoint.PROJECTS).create(project);
-        Response createdProjectResponse = uncheckedRequesterAuthByUser.getRequest(Endpoint.PROJECTS).create(project);
-
-        softAssert.assertEquals(createdProjectResponse.statusCode(), 400);
-        softAssert.assertTrue(createdProjectResponse.getBody().asString().contains("Project with this name already exists: %s".formatted(project.getName())));
+        project.setName("existing_name");
+        checkedRequesterAuthByUser.getRequest(Endpoint.PROJECTS).create(project);
+        uncheckedRequesterAuthByUser.getRequest(Endpoint.PROJECTS).create(project)
+                .then().assertThat().spec(ResponseSpecifications.checkProjectWithNameAlreadyExist(project.getName()));
     }
 
     @Test
     public void projectShouldNotBeCreatedIfNameIsInvalid() {
         var project = testData.getProject();
         project.setName("");
-        Response createdProjectResponse = uncheckedRequesterAuthByUser.getRequest(Endpoint.PROJECTS).create(project);
-        Response getProjectResponse = uncheckedRequesterAuthByUser.getRequest(Endpoint.PROJECTS).read(project.getId());
-
-        softAssert.assertNotEquals(getProjectResponse.statusCode(), 200, "Project should not exist");
-        softAssert.assertEquals(createdProjectResponse.statusCode(), 400);
-        softAssert.assertTrue(createdProjectResponse.getBody().asString().contains("Project name cannot be empty."));
+        uncheckedRequesterAuthByUser.getRequest(Endpoint.PROJECTS).create(project)
+                .then().assertThat().spec(ResponseSpecifications.checkProjectCannotBeEmpty());
+        uncheckedRequesterAuthByUser.getRequest(Endpoint.PROJECTS).read(project.getId())
+                .then().assertThat().spec(ResponseSpecifications.checkProjectNotFoundById(project.getId()));
         // TODO: Other "name" negative test cases
     }
 
@@ -100,39 +97,33 @@ public class ProjectApiTest extends BaseApiTest {
     public void projectShouldNotBeCreatedIfIdIsInvalid() {
         var project = testData.getProject();
         project.setId("2test");
-        Response createdProjectResponse = uncheckedRequesterAuthByUser.getRequest(Endpoint.PROJECTS).create(project);
-        Response getProjectResponse = uncheckedRequesterAuthByUser.getRequest(Endpoint.PROJECTS).read(project.getId());
-
-        softAssert.assertNotEquals(getProjectResponse.statusCode(), 200, "Project should not exist");
-        softAssert.assertEquals(createdProjectResponse.statusCode(), 500);
-        softAssert.assertTrue(createdProjectResponse.getBody().asString().contains("Project ID \"%s\" is invalid: starts with non-letter character '%s'.".formatted(project.getId(), project.getId().charAt(0))));
+        uncheckedRequesterAuthByUser.getRequest(Endpoint.PROJECTS).create(project)
+                .then().assertThat().spec(ResponseSpecifications.checkProjectIdIsInvalid(project.getId()));
+        uncheckedRequesterAuthByUser.getRequest(Endpoint.PROJECTS).read(project.getId())
+                .then().assertThat().spec(ResponseSpecifications.checkProjectNotFoundById(project.getId()));
         // TODO: Other "id" negative test cases
     }
 
     @Test
-    public void projectShouldNotBeCreatedIfParentProjectDoesNotExist() {
-        String notExisting = "not_existing";
+    public void projectShouldNotBeCreatedIfParentProjectIdDoesNotExist() {
+        String notExistingProjectId = "not_existing";
         var project = testData.getProject();
-        project.setParentProject(ParentProject.builder().locator(notExisting).build());
-        Response createdProjectResponse = uncheckedRequesterAuthByUser.getRequest(Endpoint.PROJECTS).create(project);
-        Response getProjectResponse = uncheckedRequesterAuthByUser.getRequest(Endpoint.PROJECTS).read(project.getId());
-
-        softAssert.assertNotEquals(getProjectResponse.statusCode(), 200, "Project should not exist");
-        softAssert.assertEquals(createdProjectResponse.statusCode(), 404);
-        softAssert.assertTrue(createdProjectResponse.getBody().asString().contains("No project found by name or internal/external id '%s'.".formatted(notExisting)));
+        project.setParentProject(ParentProject.builder().locator("id:" + notExistingProjectId).build());
+        uncheckedRequesterAuthByUser.getRequest(Endpoint.PROJECTS).create(project)
+                .then().assertThat().spec(ResponseSpecifications.checkProjectNotFoundById(notExistingProjectId));
+        uncheckedRequesterAuthByUser.getRequest(Endpoint.PROJECTS).read(project.getId())
+                .then().assertThat().spec(ResponseSpecifications.checkProjectNotFoundById(project.getId()));
     }
 
     @Test
-    public void projectShouldNotBeCreatedIfSourceProjectDoesNotExist() {
-        String notExisting = "not_existing";
+    public void projectShouldNotBeCreatedIfSourceProjectIdDoesNotExist() {
+        String notExistingProjectId = "not_existing";
         var project = testData.getProject();
-        project.setSourceProject(SourceProject.builder().locator(notExisting).build());
-        Response createdProjectResponse = uncheckedRequesterAuthByUser.getRequest(Endpoint.PROJECTS).create(project);
-        Response getProjectResponse = uncheckedRequesterAuthByUser.getRequest(Endpoint.PROJECTS).read(project.getId());
-
-        softAssert.assertNotEquals(getProjectResponse.statusCode(), 200, "Project should not exist");
-        softAssert.assertEquals(createdProjectResponse.statusCode(), 404);
-        softAssert.assertTrue(createdProjectResponse.getBody().asString().contains("No project found by name or internal/external id '%s'.".formatted(notExisting)));
+        project.setSourceProject(SourceProject.builder().locator("id:" + notExistingProjectId).build());
+        uncheckedRequesterAuthByUser.getRequest(Endpoint.PROJECTS).create(project)
+                .then().assertThat().spec(ResponseSpecifications.checkProjectNotFoundById(notExistingProjectId));
+        uncheckedRequesterAuthByUser.getRequest(Endpoint.PROJECTS).read(project.getId())
+                .then().assertThat().spec(ResponseSpecifications.checkProjectNotFoundById(project.getId()));
     }
 
 
