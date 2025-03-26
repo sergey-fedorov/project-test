@@ -1,4 +1,4 @@
-package api;
+package teamcity.api;
 
 import api.enums.Endpoint;
 import api.models.*;
@@ -6,7 +6,6 @@ import api.requests.checked.CheckedRequests;
 import api.requests.unchecked.UncheckedRequests;
 import api.spec.ResponseSpecifications;
 import api.spec.Specifications;
-import io.restassured.response.Response;
 import org.testng.annotations.BeforeMethod;
 import org.testng.annotations.Test;
 
