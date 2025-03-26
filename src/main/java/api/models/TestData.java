@@ -11,7 +11,6 @@ public class TestData {
     private Project project;
     private User user;
     private BuildType buildType;
-    private BuildConfiguration buildConfiguration;
 
     public static TestData generate() {
         // Идем по всем полям TestData и для каждого, кто наследник BaseModel вызывыем generate() c передачей уже сгенерированных сущностей
