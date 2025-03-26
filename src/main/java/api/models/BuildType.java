@@ -1,20 +1,17 @@
 package api.models;
 
 import api.annotations.Random;
-import api.models.BaseModel;
-import api.models.Project;
-import api.models.Steps;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
-import lombok.AllArgsConstructor;
-import lombok.Builder;
-import lombok.Data;
-import lombok.NoArgsConstructor;
+import lombok.*;
+import lombok.experimental.Accessors;
 
 @Builder
 @Data
 @AllArgsConstructor
 @NoArgsConstructor
 @JsonIgnoreProperties(ignoreUnknown = true)
+@EqualsAndHashCode
+@Accessors(chain = true)
 public class BuildType extends BaseModel {
     @Random
     private String id;

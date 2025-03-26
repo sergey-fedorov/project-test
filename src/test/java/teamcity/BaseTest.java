@@ -1,4 +1,4 @@
-package api;
+package teamcity;
 
 import api.generators.TestDataStorage;
 import api.models.TestData;
